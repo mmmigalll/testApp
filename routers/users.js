@@ -8,16 +8,39 @@ var customRouter = function (PG) {
 
     var userRouter = express.Router();
 
-    var userCollection = PG.Collection.extend({
+    var UserCollection = PG.Collection.extend({
         model: User
     });
 
     userRouter.get('/', function (req, res, next) {
-        User.fetchAll().then(
+        UserCollection
+            .forge()
+            /*.query(function(qb){
+                qb.where({user_name: 'vashkeba'});
+            })*/
+            .query("where", {user_name: "pupkin2"})
+            .fetch()
+            .then(
             function(_user){
                 res.status(200).send(_user);
-            }
-        ).otherwise(next);
+            })
+            .otherwise(next);
+        //res.status(200).send({success: "user get"});
+    });
+
+    userRouter.get('/:userId', function (req, res, next) {
+        var userId = req.params.userId;
+        User
+            .forge({id: userId})
+            /*.query(function(qb){
+             qb.where({user_name: 'vashkeba'});
+             })*/
+            .fetch()
+            .then(
+            function(_user){
+                res.status(200).send(_user);
+            })
+            .otherwise(next);
         //res.status(200).send({success: "user get"});
     });
 
@@ -29,6 +52,38 @@ var customRouter = function (PG) {
             .save()
             .then(function (_user) {
                 res.status(200).send(_user);
+            })
+            .otherwise(function (err) {
+                res.status(500).send(err);
+            });
+    });
+
+    userRouter.put('/:userId', function (req, res, next) {
+        var data = req.body;
+        var userId = req.params.userId;
+        var user = new User({id: userId});
+
+
+        user
+            .save(data, {patch: true})
+            .then(function (_user) {
+                res.status(200).send(_user);
+            })
+            .otherwise(function (err) {
+                res.status(500).send(err);
+            });
+    });
+
+    userRouter.delete('/:userId', function (req, res, next) {
+
+        var userId = req.params.userId;
+        var user = new User({id: userId});
+
+
+        user
+            .destroy()
+            .then(function (_user) {
+                res.status(200).send("User is deleted successfully");
             })
             .otherwise(function (err) {
                 res.status(500).send(err);
